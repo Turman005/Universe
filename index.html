@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Atlas 3D interativo da Terra ao Universo observável: todos os satélites rastreados (CelesTrak), telescópios espaciais nas posições reais (JPL Horizons), buracos negros, nebulosas e os Pilares da Criação — com fontes citadas.">
+<meta name="theme-color" content="#050816">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Universo Observável · Atlas 3D">
+<meta property="og:description" content="Atlas 3D interativo da Terra ao Universo observável: todos os satélites rastreados (CelesTrak), telescópios espaciais nas posições reais (JPL Horizons), buracos negros, nebulosas e os Pilares da Criação — com fontes citadas.">
+<meta property="og:image" content="og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="og.jpg">
+<title>Universo Observável · Atlas 3D v2</title>
+<link rel="stylesheet" href="app.css?v=mw2asuuv">
+</head>
+<body>
+<div id="app"></div>
+<div id="loading"><div class="s">GERANDO O UNIVERSO…</div></div>
+<div id="top" class="panel"><h1>Universo <span>Observável</span><i class="a3" style="font-style:normal"> · Atlas 3D</i> <small>v3</small></h1><p>Da Terra e seus satélites à Radiação Cósmica de Fundo — com dados reais da CelesTrak, JPL Horizons e SIMBAD.</p></div>
+<div id="time" class="panel">
+  <span id="tDate">—</span>
+  <button class="btn sm" id="tNow">Agora</button>
+  <select id="tSpeed" title="Velocidade da simulação"></select>
+  <input type="range" id="tSlider" min="-30" max="30" step="0.01" value="0" title="Deslocar ±30 dias">
+  <span id="tOff">agora</span>
+  <div class="stamp"><span id="dataStamp"></span><button class="btn" id="refreshBtn" title="Baixar elementos orbitais atuais da CelesTrak">Atualizar satélites</button></div>
+</div>
+<div id="scrim"></div>
+<div id="side" class="panel">
+  <button class="btn" id="sideClose" aria-label="Fechar menu">✕ Fechar</button>
+  <div id="searchBox"><input id="search" type="search" placeholder="Buscar: ISS, JWST, M87*, Pilares, NORAD…" autocomplete="off"><div id="results" hidden></div></div>
+  <h3>Escalas</h3><div id="levels"></div>
+  <h3>Camadas</h3><div id="layers"></div>
+  <h3>Objetos nesta escala</h3><div id="objlist"></div>
+</div>
+<div id="info" class="panel">
+  <span class="chip" id="iScale"></span>
+  <h2 id="iName"></h2><div class="type" id="iType"></div>
+  <div id="iBadge"></div>
+  <div id="iThumb"></div>
+  <dl id="iRows"></dl>
+  <dl id="iLive"></dl>
+  <ul id="iFacts"></ul>
+  <div id="iNote"></div>
+  <div id="iRefs"></div>
+  <div class="row"><button class="btn" id="focusBtn">Centralizar</button><button class="btn hot" id="chaseBtn" hidden title="Voa até o objeto e o acompanha de perto, em tamanho real">🎥 Visão da câmera</button><button class="btn" id="closeInfo">Fechar</button></div>
+</div>
+<div id="chaseBar" class="panel" hidden><span class="ic">🎥</span><span class="t">Seguindo <b class="nm"></b><span class="sub">tamanho real · arraste para girar · role para aproximar</span></span><button class="btn x" title="Sair (Esc)">Sair ✕</button></div>
+<div id="bottom" class="panel">
+  <button class="btn" id="menuBtn" aria-label="Menu">☰</button>
+  <button class="btn" id="lvOut" title="Subir de escala (afastar)" aria-label="Escala maior">−</button>
+  <button class="btn" id="lvIn" title="Descer de escala (aproximar)" aria-label="Escala menor">+</button>
+  <div id="scale"><span class="k">Largura da vista</span><span id="scaleTxt">—</span><span id="lvlname"></span></div>
+  <div id="toggles"></div>
+  <button class="btn" id="sourcesBtn">Fontes de dados</button>
+  <button class="btn" id="helpBtn">? Ajuda</button>
+  <button class="btn" id="optsBtn" aria-label="Opções">⚙</button>
+</div>
+<div id="opts" class="panel"><div class="h">Opções de exibição</div><div id="optsT"></div><div class="acts"><button class="btn" id="sourcesBtn2">Fontes de dados</button><button class="btn" id="helpBtn2">? Ajuda</button></div><div id="perfNote" style="font-size:11.5px;color:var(--mut);line-height:1.4"></div></div>
+<div id="ladder"><div class="bar"></div>
+  <div class="tick" style="bottom:4.9%">10.000 km</div><div class="tick" style="bottom:24.8%">1 UA</div><div class="tick" style="bottom:47.6%">1 a.l.</div><div class="tick" style="bottom:61.9%">1.000 a.l.</div>
+  <div class="tick" style="bottom:76.2%">1 milhão</div><div class="tick" style="bottom:90.5%">1 bilhão</div><div class="tick" style="bottom:100%">100 bi</div>
+  <div id="ladderMark"></div><div id="ladderVal" style="bottom:0"></div>
+</div>
+<div id="help"><div class="panel">
+  <h2>Como navegar</h2>
+  <p><b>Arrastar / 1 dedo</b>: girar · <b>Botão direito / 2 dedos</b>: mover · <b>Roda / pinça</b>: zoom.<br>No celular, use <b>−</b> e <b>+</b> na barra inferior (ou continue a pinça no limite do zoom) para trocar de escala; <b>☰</b> abre escalas, busca e camadas; <b>⚙</b> abre opções e fontes.<br>
+  Continue girando a roda <b>para fora</b> no limite do zoom para subir de escala; <b>para dentro</b> (perto do centro) para descer.<br>
+  <b>Teclas</b>: <kbd>1</kbd>–<kbd>9</kbd> escolhem a escala, <kbd>-</kbd>/<kbd>=</kbd> sobem/descem, <kbd>/</kbd> busca, <kbd>Esc</kbd> limpa a seleção.</p>
+  <p><b>Passe o mouse</b> sobre um objeto para destacá-lo e <b>clique</b> para centralizar e ver informações. Na Terra, clique em qualquer ponto para ver o satélite e a órbita dele.</p>
+  <p><b>Tempo</b>: o relógio começa no horário atual; use a velocidade e o deslizador (±30 dias) para ver satélites, Lua, telescópios e planetas se moverem.</p>
+  <p style="color:var(--mut);font-size:12px">Notas: na escala Terra tudo está em escala real (Terra, Lua, satélites, L1/L2). No Sistema Solar os tamanhos estão exagerados e as distâncias comprimidas (raiz quadrada), mas as direções dos planetas são reais. Os braços da Via Láctea, a teia cósmica e o mapa da CMB são procedurais; buracos negros, nebulosas, galáxias e aglomerados usam coordenadas e distâncias publicadas. Veja “Fontes de dados”. Clique para fechar.</p>
+</div></div>
+<div id="sources"><div class="panel"><button class="btn x" id="closeSources">Fechar</button><h2>Fontes de dados</h2><div id="sourcesBody"></div></div></div>
+<script type="text/plain" id="d-thumbmeta">{
+"pilares": {
+"title": "File:Pillars of Creation (NIRCam Image).jpg",
+"license": "Public domain",
+"artist": "SCIENCE: NASA, ESA, CSA, STScI; IMAGE PROCESSING: Joseph DePasquale (STScI), Anton M. Koekemoer (STScI), Alyssa Pagan (STScI)",
+"page": "https://commons.wikimedia.org/wiki/File:Pillars_of_Creation_(NIRCam_Image).jpg"
+},
+"m16": {
+"title": "File:Eagle Nebula from ESO.jpg",
+"license": "CC BY 4.0",
+"artist": "ESO",
+"page": "https://commons.wikimedia.org/wiki/File:Eagle_Nebula_from_ESO.jpg"
+},
+"m42": {
+"title": "File:Orion Nebula - Hubble 2006 mosaic 18000.jpg",
+"license": "Public domain",
+"artist": "NASA, ESA, M. Robberto (Space Telescope Science Institute/ESA) and the Hubble Space Telescope Orion Treasury Project Team",
+"page": "https://commons.wikimedia.org/wiki/File:Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg"
+},
+"carina": {
+"title": "File:The spectacular star-forming Carina Nebula imaged by the VLT Survey Telescope.jpg",
+"license": "CC BY 4.0",
+"artist": "ESO",
+"page": "https://commons.wikimedia.org/wiki/File:The_spectacular_star-forming_Carina_Nebula_imaged_by_the_VLT_Survey_Telescope.jpg"
+},
+"m1": {
+"title": "File:Crab Nebula.jpg",
+"license": "Public domain",
+"artist": "NASA, ESA, J. Hester and A. Loll (Arizona State University)",
+"page": "https://commons.wikimedia.org/wiki/File:Crab_Nebula.jpg"
+},
+"helix": {
+"title": "File:The Helix Nebula.jpg",
+"license": "CC BY 4.0",
+"artist": "ESO/VISTA/J. Emerson",
+"page": "https://commons.wikimedia.org/wiki/File:The_Helix_Nebula.jpg"
+},
+"m57": {
+"title": "File:Hubble image of the Ring Nebula (Messier 57).jpg",
+"license": "Public domain",
+"artist": "NASA, ESA, and C. Robert O’Dell (Vanderbilt University)",
+"page": "https://commons.wikimedia.org/wiki/File:Hubble_image_of_the_Ring_Nebula_(Messier_57).jpg"
+},
+"m8": {
+"title": "File:VST images the Lagoon Nebula.jpg",
+"license": "CC BY 4.0",
+"artist": "ESO/VPHAS+ team",
+"page": "https://commons.wikimedia.org/wiki/File:VST_images_the_Lagoon_Nebula.jpg"
+},
+"m20": {
+"title": "File:Trifid Nebula (M20) (gemini0207a).jpg",
+"license": "CC BY 4.0",
+"artist": "International Gemini Observatory/Ingrid Braul, Southlands Elementary, Vancouver BC",
+"page": "https://commons.wikimedia.org/wiki/File:Trifid_Nebula_(M20)_(gemini0207a).jpg"
+},
+"b33": {
+"title": "File:Hubble Sees a Horsehead of a Different Color.jpg",
+"license": "CC BY 4.0",
+"artist": "NASA/ESA/Hubble Heritage Team",
+"page": "https://commons.wikimedia.org/wiki/File:Hubble_Sees_a_Horsehead_of_a_Different_Color.jpg"
+},
+"tarantula": {
+"title": "File:Tarantula Nebula by JWST.jpg",
+"license": "Public domain",
+"artist": "NASA, ESA, CSA, STScI, Webb ERO Production Team",
+"page": "https://commons.wikimedia.org/wiki/File:Tarantula_Nebula_by_JWST.jpg"
+},
+"rosette": {
+"title": "File:Rosette Nebula, NGC 2237 (noao-rosette).jpg",
+"license": "CC BY 4.0",
+"artist": "N.A.Sharp/NOIRLab/NSF/AURA",
+"page": "https://commons.wikimedia.org/wiki/File:Rosette_Nebula,_NGC_2237_(noao-rosette).jpg"
+},
+"ngc7000": {
+"title": "File:North America Nebula.jpg",
+"license": "Public domain",
+"artist": "NASA/JPL-Caltech",
+"page": "https://commons.wikimedia.org/wiki/File:North_America_Nebula.jpg"
+},
+"veil": {
+"title": "File:Ultraviolet image of the Cygnus Loop Nebula crop.jpg",
+"license": "Public domain",
+"artist": "NASA/JPL-Caltech",
+"page": "https://commons.wikimedia.org/wiki/File:Ultraviolet_image_of_the_Cygnus_Loop_Nebula_crop.jpg"
+},
+"ngc6543": {
+"title": "File:NGC6543.jpg",
+"license": "Public domain",
+"artist": "J.P. Harrington and K.J. Borkowski (University of Maryland), and NASA",
+"page": "https://commons.wikimedia.org/wiki/File:NGC6543.jpg"
+},
+"ngc6302": {
+"title": "File:NGC 6302 Hubble 2009.full.jpg",
+"license": "Public domain",
+"artist": "NASA, ESA and the Hubble SM4 ERO Team",
+"page": "https://commons.wikimedia.org/wiki/File:NGC_6302_Hubble_2009.full.jpg"
+},
+"m17": {
+"title": "File:VST image of the spectacular star-forming region Messier 17 (Omega Nebula).jpg",
+"license": "CC BY 4.0",
+"artist": "ESO/INAF-VST/OmegaCAM. Acknowledgement: OmegaCen/Astro-WISE/Kapteyn Institute",
+"page": "https://commons.wikimedia.org/wiki/File:VST_image_of_the_spectacular_star-forming_region_Messier_17_(Omega_Nebula).jpg"
+},
+"heartsoul": {
+"title": "File:Heart and Soul nebulae.jpg",
+"license": "Public domain",
+"artist": "NASA/JPL-Caltech/UCLA",
+"page": "https://commons.wikimedia.org/wiki/File:Heart_and_Soul_nebulae.jpg"
+},
+"m45": {
+"title": "File:Pleiades large.jpg",
+"license": "Public domain",
+"artist": "NASA, ESA, AURA/Caltech, Palomar Observatory",
+"page": "https://commons.wikimedia.org/wiki/File:Pleiades_large.jpg"
+},
+"b68": {
+"title": "File:Barnard 68 (eso0102a).tif",
+"license": "CC BY 4.0",
+"artist": "European Southern Observatory (ESO)",
+"page": "https://commons.wikimedia.org/wiki/File:Barnard_68_(eso0102a).tif"
+},
+"bok": {
+"title": "File:Bok globules in IC2944.jpg",
+"license": "Public domain",
+"artist": "NASA and The Hubble Heritage Team (STScI/AURA)",
+"page": "https://commons.wikimedia.org/wiki/File:Bok_globules_in_IC2944.jpg"
+},
+"lmc": {
+"title": "File:Large Magellanic Cloud.jpg",
+"license": "Public domain",
+"artist": "ESA/NASA/JPL-Caltech/STScI",
+"page": "https://commons.wikimedia.org/wiki/File:Large_Magellanic_Cloud.jpg"
+},
+"smc": {
+"title": "File:Small Magellanic Cloud (ground-based image) (heic0603d).jpg",
+"license": "Public domain",
+"artist": "ESA/Hubble and Digitized Sky Survey 2. Acknowledgements: Davide De Martin",
+"page": "https://commons.wikimedia.org/wiki/File:Small_Magellanic_Cloud_(ground-based_image)_(heic0603d).jpg"
+},
+"fermi": {
+"title": "File:Fermi discovers giant gamma-ray bubbles in the Milky Way (5161800961).jpg",
+"license": "Public domain",
+"artist": "NASA Goddard Space Flight Center from Greenbelt, MD, USA",
+"page": "https://commons.wikimedia.org/wiki/File:Fermi_discovers_giant_gamma-ray_bubbles_in_the_Milky_Way_(5161800961).jpg"
+},
+"m87bh": {
+"title": "File:Black hole - Messier 87.jpg",
+"license": "CC BY 4.0",
+"artist": "Event Horizon Telescope",
+"page": "https://commons.wikimedia.org/wiki/File:Black_hole_-_Messier_87.jpg"
+},
+"sgrabh": {
+"title": "File:A view of the Milky Way supermassive black hole Sagittarius A* in polarised light (eso2406a).jpg",
+"license": "CC BY 4.0",
+"artist": "EHT Collaboration",
+"page": "https://commons.wikimedia.org/wiki/File:A_view_of_the_Milky_Way_supermassive_black_hole_Sagittarius_A*_in_polarised_light_(eso2406a).jpg"
+},
+"cygx1": {
+"title": "File:Chandra image of Cygnus X-1.jpg",
+"license": "Public domain",
+"artist": "NASA's Chandra X-ray Observatory; Credits: NASA/CXC",
+"page": "https://commons.wikimedia.org/wiki/File:Chandra_image_of_Cygnus_X-1.jpg"
+},
+"oriona": {
+"title": "File:Herschel’s view of a molecular cloud ESA384010.jpg",
+"license": "CC BY-SA 3.0 igo",
+"artist": "European Space Agency",
+"page": "https://commons.wikimedia.org/wiki/File:Herschel%E2%80%99s_view_of_a_molecular_cloud_ESA384010.jpg"
+},
+"taurus": {
+"title": "File:Part of the Taurus Molecular Cloud.jpg",
+"license": "CC BY 3.0",
+"artist": "ESO/APEX (MPIfR/ESO/OSO)/A. Hacar et al./Digitized Sky Survey 2. Acknowledgment: Davide De Martin.",
+"page": "https://commons.wikimedia.org/wiki/File:Part_of_the_Taurus_Molecular_Cloud.jpg"
+},
+"perseus": {
+"title": "File:NGC 1333 Champions League.jpg",
+"license": "CC BY 4.0",
+"artist": "ESA/Hubble &amp; NASA, K. Stapelfeldt",
+"page": "https://commons.wikimedia.org/wiki/File:NGC_1333_Champions_League.jpg"
+},
+"m31": {
+"title": "File:Andromeda galaxy.jpg",
+"license": "Public domain",
+"artist": "NASA/JPL/California Institute of Technology",
+"page": "https://commons.wikimedia.org/wiki/File:Andromeda_galaxy.jpg"
+},
+"cena": {
+"title": "File:Black Hole Outflows From Centaurus A.jpg",
+"license": "CC BY 4.0",
+"artist": "ESO/WFI (Optical); MPIfR/ESO/APEX/A.Weiss et al. (Submillimetre); NASA/CXC/CfA/R.Kraft et al. (X-ray)",
+"page": "https://commons.wikimedia.org/wiki/File:Black_Hole_Outflows_From_Centaurus_A.jpg"
+},
+"gaiabh": {
+"title": "File:Artist’s impression of the system with the most massive stellar black hole in our galaxy (eso2408a).jpg",
+"license": "CC BY 4.0",
+"artist": "ESO/L. Calçada",
+"page": "https://commons.wikimedia.org/wiki/File:Artist%E2%80%99s_impression_of_the_system_with_the_most_massive_stellar_black_hole_in_our_galaxy_(eso2408a).jpg"
+}
+}</script>
+<script type="text/plain" id="d-texmeta">{"day": {"title": "File:Land shallow topo 2048.jpg", "url": "https://upload.wikimedia.org/wikipedia/commons/9/91/Land_shallow_topo_2048.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original", "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/91/Land_shallow_topo_2048.jpg/3840px-Land_shallow_topo_2048.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "w": 21600, "h": 10800, "license": "Public domain", "artist": "Reto Stöckli/NASA GSFC (land surface, shallow water, clouds); Robert Simmon (ocean color, compositing, 3D globes, animation); MODIS Land Group; MODIS Science Data Support Team; MODIS Atmosphere Group;", "credit": "https://visibleearth.nasa.gov/view.php?id=57752 (image link)", "desc": "This spectacular “blue marble” image is the most detailed true-color image of the entire Earth to date. Using a collection of satellite-based observations, scientists and visualizers stitched together", "page": "https://commons.wikimedia.org/wiki/File:Land_shallow_topo_2048.jpg"}, "night": {"title": "File:BlackMarble20161km.jpg", "url": "https://upload.wikimedia.org/wikipedia/commons/a/af/BlackMarble20161km.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original", "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/af/BlackMarble20161km.jpg/3840px-BlackMarble20161km.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "w": 43200, "h": 21600, "license": "Public domain", "artist": "NASA Earth Observatory images by Joshua Stevens, using Suomi NPP VIIRS data from Miguel Román, NASA's Goddard Space Flight Center", "credit": "NASA https://www.nasa.gov/feature/goddard/2017/new-night-lights-maps-open-up-possible-real-time-applications (image link)", "desc": "This composite image shows Earth's night lights as observed in 2016. The compositing technique selected the best cloud-free nights in each month over each land mass. The team has also reprocessed 2012", "page": "https://commons.wikimedia.org/wiki/File:BlackMarble20161km.jpg"}, "clouds": {"title": "File:Solarsystemscope texture 2k earth clouds.jpg", "url": "https://upload.wikimedia.org/wikipedia/commons/e/ed/Solarsystemscope_texture_2k_earth_clouds.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original", "thumb": null, "w": 2048, "h": 1024, "license": "CC BY 4.0", "artist": "Solar System Scope", "credit": "http://solarsystemscope.com/textures", "desc": "Equirectangular projection of a sample atmosphere of Earth based on NASA elevation and imagery data with colours slightly more saturated and gaps filled with similar fictional terrain.", "page": "https://commons.wikimedia.org/wiki/File:Solarsystemscope_texture_2k_earth_clouds.jpg"}}</script>
+<script>window.__UV2_VER="mw2asuuv"</script>
+<script src="app.js?v=mw2asuuv" defer></script>
+<noscript><p style="position:fixed;inset:0;display:grid;place-items:center;color:#fff">Ative o JavaScript para ver o atlas.</p></noscript>
+</body>
+</html>
